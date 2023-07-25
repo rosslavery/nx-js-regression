@@ -1,0 +1,75 @@
+{
+  "name": "broken-node",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/broken-node/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/broken-node",
+        "format": ["cjs"],
+        "thirdParty": true,
+        "esbuildConfig": "apps/broken-node/esbuild.config.js",
+        "main": "apps/broken-node/src/main.ts",
+        "tsConfig": "apps/broken-node/tsconfig.app.json",
+        "generatePackageJson": true
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "generateLockfile": true,
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "serve-app": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "broken-node:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "broken-node:build:development"
+        },
+        "production": {
+          "buildTarget": "broken-node:build:production"
+        }
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": true,
+        "commands": [
+          "pnpm exec nx serve-app broken-node",
+          "pnpm exec nx docker-compose broken-node"
+        ]
+      }
+    },
+    "docker-compose": {
+      "command": "docker-compose -f apps/broken-node/docker-compose.yml up -d"
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/broken-node/**/*.ts"]
+      }
+    },
+    "docker-build": {
+      "dependsOn": ["build"],
+      "command": "docker build -f apps/broken-node/Dockerfile . -t broken-node"
+    }
+  },
+  "tags": []
+}
